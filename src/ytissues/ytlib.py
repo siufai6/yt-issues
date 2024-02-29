@@ -24,8 +24,11 @@ class Project:
 
     """
 
-    get_list: str = "/youtrack/api/admin/projects"
-    get_item: str = "/youtrack/api/admin/projects/{project_id}"
+    #get_list: str = "/youtrack/api/admin/projects"
+    #get_item: str = "/youtrack/api/admin/projects/{project_id}"
+
+    get_list: str = "/admin/projects"
+    get_item: str = "/admin/projects/{project_id}"
 
     def __init__(self, project_id: str, shortname: str = None, name: str = None):
         self.project_id = project_id
@@ -115,8 +118,11 @@ class Issue:
     When instantiated, it loads the missing values from the YT service.
     """
 
-    get_list: str = "/youtrack/api/admin/projects/{project_id}/issues"
-    get_item: str = "/youtrack/api/issues/{issue_id}"
+    #get_list: str = "/youtrack/api/admin/projects/{project_id}/issues"
+    #get_item: str = "/youtrack/api/issues/{issue_id}"
+
+    get_list: str = "/admin/projects/{project_id}/issues"
+    get_item: str = "/issues/{issue_id}"
 
     fields = "id,idReadable,created,updated,resolved,summary,description,commentsCount"
 
@@ -214,9 +220,10 @@ class Issue:
         Args:
             backup_path: the pathlib.Path to the backup directory.
         """
-        issue_path = backup_path / Path(self.summary)
+        issue_path = backup_path / Path(self.summary.strip())
         issue_path.mkdir(parents=True, exist_ok=True)
-        filename = self.summary + ".md"
+        filename = self.summary.strip() + ".md"
+        print("filename is {} ".format(filename))
         filepath = issue_path / Path(filename)
         if self.resolved:
             resolved_text = f"Resolved: {self.resolved.strftime('%Y-%m-%d %H:%M')}.\n"
@@ -235,9 +242,12 @@ class Issue:
         filepath.write_text(issue_text)
         if len(self.attachments) > 0:
             yt_url = os.environ["YT_URL"]
+
+            dl_att_yt_url = yt_url.split("/api")[0] if "api" in yt_url else yt_url
             for attachment in self.attachments:
                 save_file = issue_path / attachment.name
-                opened_url = request.urlopen(yt_url + attachment.url)
+                print("attachment URL= {} save to file={}".format(dl_att_yt_url + attachment.url, save_file))
+                opened_url = request.urlopen(dl_att_yt_url + attachment.url)
                 save_file.write_bytes(opened_url.read())
 
     def attachment_list(self) -> str:
@@ -312,7 +322,8 @@ class Issue:
 class IssueAttachment:
     """Represents an Attachment to the issue (Name and link, not the data!)."""
 
-    get_list = "/youtrack/api/issues/{issue_id}/attachments"
+    #get_list = "/youtrack/api/issues/{issue_id}/attachments"
+    get_list = "/issues/{issue_id}/attachments"
     fields = "name,size,mimeType,extension,charset,url"
 
     def __init__(self, issue_id, name, size, mimetype, extension, charset, url):
@@ -331,8 +342,10 @@ class IssueComment:
     When instantiated, it loads the missing values from the YT service.
     """
 
-    get_list: str = "/youtrack/api/issues/{issue_id}/comments"
-    get_item: str = "/youtrack/api/issues/{issue_id}/comments/{commentID}"
+    #get_list: str = "/youtrack/api/issues/{issue_id}/comments"
+    #get_item: str = "/youtrack/api/issues/{issue_id}/comments/{commentID}"
+    get_list: str = "/issues/{issue_id}/comments"
+    get_item: str = "/issues/{issue_id}/comments/{commentID}"
 
     fields = "id,text,created,updated,author(name),attachments(id,name)"
 
